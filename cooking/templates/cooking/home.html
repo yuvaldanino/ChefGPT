@@ -1,0 +1,156 @@
+{% extends 'cooking/base.html' %}
+
+{% block title %}Home - ChefGPT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">My Recipes</h1>
+            <p class="text-muted">Your saved recipes from chats with ChefGPT</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'new_chat' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Chat
+            </a>
+        </div>
+    </div>
+
+    {% if saved_recipes %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in saved_recipes %}
+        <div class="col">
+            <div class="card h-100 recipe-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <!-- <h5 class="card-title">{{ recipe.title }}</h5> -->
+                        <!-- view chat button  -->
+                         <a href="{% url 'chat' recipe.chat_session.id %}" class="btn btn-primary">View Chat</a>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'chat' recipe.chat_session.id %}">
+                                        <i class="fas fa-comments me-2"></i>View Chat
+                                    </a>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger delete-recipe" data-recipe-id="{{ recipe.id }}">
+                                        <i class="fas fa-trash-alt me-2"></i>Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="recipe-content">
+                        {{ recipe.content|safe }}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <small class="text-muted">
+                        <i class="far fa-calendar me-1"></i>
+                        Saved on {{ recipe.created_at|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-book-open fa-4x text-muted"></i>
+        </div>
+        <h2 class="h4 mb-3">No recipes saved yet</h2>
+        <p class="text-muted mb-4">Start a chat with ChefGPT to create and save your first recipe!</p>
+        <a href="{% url 'new_chat' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Start New Chat
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.recipe-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.recipe-content {
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+.recipe-content h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-content h3 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.recipe-content ul, .recipe-content ol {
+    padding-left: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.recipe-content li {
+    margin-bottom: 0.3rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #fee2e2;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle recipe deletion
+    document.querySelectorAll('.delete-recipe').forEach(button => {
+        button.addEventListener('click', async function() {
+            const recipeId = this.dataset.recipeId;
+            if (confirm('Are you sure you want to delete this recipe?')) {
+                try {
+                    const response = await fetch(`/recipe/${recipeId}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Remove the recipe card from the UI
+                        this.closest('.col').remove();
+                        
+                        // If no recipes left, show the empty state
+                        if (document.querySelectorAll('.recipe-card').length === 0) {
+                            location.reload();
+                        }
+                    } else {
+                        alert('Failed to delete recipe');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete recipe');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
