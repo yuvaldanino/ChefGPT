@@ -1,19 +1,24 @@
+5/4 
+- add make chat responses faster 
+- 
+
+
 5/3
 - basically made a bunch of the backend 
 
 
 to do:
-- when we text we shouldnt auto scroll to button of message 
+DONE : - when we text we shouldnt auto scroll to button of message 
 - make it so you can share recipes, then theyre displayed on the social page which has liked and dislikes. like 
     with this users can share recipes and this becomes like a social media for cookign also 
     - in social media app. if you see a recipe you like. you can click open recipe in chat
             this open the recipe in a chat for you and makes it so you can ask stuff about the current recipe 
 - add voice bot capabilities so you can talk to send messages 
-**** - mayeb change to better model for fasted responded and better shit 
+DONE : **** - mayeb change to better model for fasted responded and better shit -> 3.5 way cheaper 
 - make something that can suggest receipes to you based on the recipes you make usually 
 - maybe we can add calorie tracking to this?
-- when you type message it goes into 2 lines versus now that youre just on 1 long line. 
-- in profile page it shuold say User profile and no My profile 
+DONE :  - when you type message it goes into 2 lines versus now that youre just on 1 long line. 
+DONE : - in profile page it shuold say User profile and no My profile 
 
 - maybe fine tune the LLM on open AI to make it a chef 
 - explore open AI API there is hella shit there 
