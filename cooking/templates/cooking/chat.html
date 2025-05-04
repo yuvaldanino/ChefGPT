@@ -28,9 +28,12 @@
         <div class="border-top p-3">
             <form id="message-form" class="d-flex gap-2">
                 {% csrf_token %}
-                <input type="text" name="message" id="message-input" 
+                <textarea name="message" id="message-input" 
                        class="form-control"
-                       placeholder="Type your message here...">
+                       placeholder="Type your message here..."
+                       rows="1"
+                       style="resize: none; min-height: 38px; max-height: 200px;"
+                ></textarea>
                 <button type="submit" class="btn btn-primary">
                     Send
                 </button>
@@ -214,6 +217,18 @@
     background-color: #28a745 !important;
     border-color: #28a745 !important;
 }
+
+/* Message Input Styles */
+#message-input {
+    overflow-y: hidden;
+    line-height: 1.5;
+    padding: 8px 12px;
+}
+
+/* Ensure the form container adjusts with the textarea */
+#message-form {
+    align-items: flex-start;
+}
 </style>
 
 <script>
@@ -370,6 +385,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Auto-resize textarea as user types
+    messageInput.addEventListener('input', function() {
+        // Reset height to auto to get the correct scrollHeight
+        this.style.height = 'auto';
+        // Set the height to match the content
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Handle Enter key in textarea
+    messageInput.addEventListener('keydown', function(e) {
+        // Check if Enter was pressed without Shift key
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent new line
+            messageForm.dispatchEvent(new Event('submit')); // Submit the form
+        }
+    });
+
+    // Reset textarea height when message is sent
     messageForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -379,6 +412,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add user message to chat
         addMessage(message, 'user');
         messageInput.value = '';
+        // Reset textarea height
+        messageInput.style.height = 'auto';
 
         try {
             const response = await fetch(`/chat/{{ chat.id }}/send/`, {
@@ -422,8 +457,21 @@ document.addEventListener('DOMContentLoaded', function() {
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
         
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Wait for the next frame to ensure the message is rendered
+        requestAnimationFrame(() => {
+            // Get the actual position of the new message
+            const messageRect = messageDiv.getBoundingClientRect();
+            const containerRect = chatMessages.getBoundingClientRect();
+            
+            // Calculate the scroll position needed to show the message at the top
+            const scrollPosition = chatMessages.scrollTop + (messageRect.top - containerRect.top);
+            
+            // Scroll to position
+            chatMessages.scrollTo({
+                top: scrollPosition,
+                behavior: 'smooth'
+            });
+        });
     }
 });
 </script>
