@@ -9,6 +9,11 @@ to do:
     - in social media app. if you see a recipe you like. you can click open recipe in chat
             this open the recipe in a chat for you and makes it so you can ask stuff about the current recipe 
 - add voice bot capabilities so you can talk to send messages 
-- mayeb change to better model for fasted responded and better shit 
+**** - mayeb change to better model for fasted responded and better shit 
 - make something that can suggest receipes to you based on the recipes you make usually 
 - maybe we can add calorie tracking to this?
+- when you type message it goes into 2 lines versus now that youre just on 1 long line. 
+- in profile page it shuold say User profile and no My profile 
+
+- maybe fine tune the LLM on open AI to make it a chef 
+- explore open AI API there is hella shit there 

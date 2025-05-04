@@ -228,37 +228,107 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateRecipeSidebar(content) {
         console.log("Checking content for recipe:", content);
         
-        // Look for recipe content (starts with <h2> and contains emoji)
-        if (content.includes('<h2>') && /<h2>[^<]*\p{Emoji}/u.test(content)) {
+        // Look for recipe content (using data-recipe attribute)
+        if (content.includes('data-recipe="title"')) {
             console.log("Found recipe marker");
             
-            // Extract everything from <h2> to the end of the content
-            const startIndex = content.indexOf('<h2>');
-            const recipeContent = content.substring(startIndex);
+            // Create a temporary div to parse the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
             
-            console.log("Extracted recipe content:", recipeContent);
-            
-            // Update sidebar
-            activeRecipe.innerHTML = recipeContent;
-            recipePlaceholder.style.display = 'none';
-            activeRecipe.style.display = 'block';
-            saveRecipeBtn.style.display = 'block';
-            
-            // Scroll recipe to top
-            document.getElementById('recipe-content').scrollTop = 0;
+            // Find the recipe section (starting from title)
+            const recipeTitle = tempDiv.querySelector('[data-recipe="title"]');
+            if (recipeTitle) {
+                console.log("Found recipe title:", recipeTitle.textContent);
+                
+                // Get the recipe content by starting from the h2 tag
+                let recipeContent = '';
+                let currentElement = recipeTitle;
+                
+                // Keep track of the last element to preserve whitespace
+                let lastElement = null;
+                
+                while (currentElement) {
+                    if (currentElement.nodeType === 1) { // Element node
+                        if (lastElement) {
+                            recipeContent += '\n\n'; // Add spacing between elements
+                        }
+                        recipeContent += currentElement.outerHTML;
+                        lastElement = currentElement;
+                    } else if (currentElement.nodeType === 3) { // Text node
+                        const text = currentElement.textContent.trim();
+                        if (text) {
+                            if (lastElement) {
+                                recipeContent += '\n'; // Add line break before text
+                            }
+                            recipeContent += text;
+                            lastElement = currentElement;
+                        }
+                    }
+                    currentElement = currentElement.nextSibling;
+                }
+                
+                console.log("Recipe content to display:", recipeContent);
+                
+                // Update sidebar
+                activeRecipe.innerHTML = recipeContent;
+                recipePlaceholder.style.display = 'none';
+                activeRecipe.style.display = 'block';
+                saveRecipeBtn.style.display = 'block';
+                
+                // Scroll recipe to top
+                document.getElementById('recipe-content').scrollTop = 0;
+            } else {
+                console.log("No recipe title found in content");
+            }
         } else {
             console.log("No recipe marker found");
         }
     }
 
+    function extractRecipeData(content) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        
+        function getValueAfter(element) {
+            if (!element) return null;
+            
+            // Get all text nodes between this header and the next header
+            let value = '';
+            let currentNode = element.nextSibling;
+            
+            while (currentNode && !currentNode.matches?.('[data-recipe]')) {
+                if (currentNode.nodeType === 3) { // Text node
+                    const text = currentNode.textContent.trim();
+                    if (text) {
+                        value = text; // Just take the first non-empty text we find
+                        break;
+                    }
+                }
+                currentNode = currentNode.nextSibling;
+            }
+            
+            return value || null;
+        }
+        
+        const recipeData = {
+            title: tempDiv.querySelector('[data-recipe="title"]')?.textContent.trim().replace(/^[^\w\s]+ /, ''),
+            difficulty: getValueAfter(tempDiv.querySelector('[data-recipe="difficulty"]')),
+            cuisine_type: getValueAfter(tempDiv.querySelector('[data-recipe="cuisine"]')),
+            prep_time: getValueAfter(tempDiv.querySelector('[data-recipe="prep-time"]')),
+            servings: getValueAfter(tempDiv.querySelector('[data-recipe="servings"]'))
+        };
+        
+        console.log("Extracted recipe data:", recipeData);
+        return recipeData;
+    }
+
     saveRecipeBtn.addEventListener('click', async function() {
         try {
-            // Extract recipe title
-            const titleMatch = activeRecipe.innerHTML.match(/<h2>[^<]*<\/h2>/);
-            if (!titleMatch) {
-                throw new Error('No recipe title found');
-            }
-            const title = titleMatch[0].replace(/<\/?h2>/g, '').trim();
+            const content = activeRecipe.innerHTML;
+            const recipeData = extractRecipeData(content);
+            
+            console.log("Data being sent to save:", recipeData);
             
             const response = await fetch(`/chat/{{ chat.id }}/save-recipe/`, {
                 method: 'POST',
@@ -267,8 +337,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
                 body: JSON.stringify({
-                    title: title,
-                    content: activeRecipe.innerHTML
+                    content: content,
+                    ...recipeData
                 })
             });
 

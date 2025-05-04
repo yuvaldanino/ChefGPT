@@ -1,4 +1,5 @@
 {% extends 'cooking/base.html' %}
+{% load recipe_filters %}
 
 {% block title %}Home - ChefGPT{% endblock %}
 
@@ -22,10 +23,27 @@
         <div class="col">
             <div class="card h-100 recipe-card">
                 <div class="card-body">
+                    <h5 class="card-title mb-3">{{ recipe.title }}</h5>
+                    <a href="{% url 'chat' recipe.chat_session.id %}" class="btn btn-primary">
+                        <i class="fas fa-comments me-2"></i>View Chat
+                    </a>
+                    <br>
+                    <br>
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <!-- <h5 class="card-title">{{ recipe.title }}</h5> -->
-                        <!-- view chat button  -->
-                         <a href="{% url 'chat' recipe.chat_session.id %}" class="btn btn-primary">View Chat</a>
+                        <div class="recipe-metadata">
+                            {% if recipe.difficulty %}
+                            <span class="badge bg-primary me-2">⚡ {{ recipe.difficulty }}</span>
+                            {% endif %}
+                            {% if recipe.cuisine_type %}
+                            <span class="badge bg-success me-2">🌍 {{ recipe.cuisine_type }}</span>
+                            {% endif %}
+                            {% if recipe.prep_time %}
+                            <span class="badge bg-info me-2">⏲️ {{ recipe.prep_time }}</span>
+                            {% endif %}
+                            {% if recipe.servings %}
+                            <span class="badge bg-warning">👥 {{ recipe.servings }}</span>
+                            {% endif %}
+                        </div>
                         <div class="dropdown">
                             <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-ellipsis-v"></i>
@@ -45,7 +63,12 @@
                         </div>
                     </div>
                     <div class="recipe-content">
-                        {{ recipe.content|safe }}
+                        {% with content=recipe.content|safe %}
+                            <h3>📝 Ingredients</h3>
+                            {% if '<h3 data-recipe="ingredients">' in content %}
+                                {{ content|split:'<h3 data-recipe="ingredients">📝 Ingredients</h3>'|last|safe }}
+                            {% endif %}
+                        {% endwith %}
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
@@ -82,22 +105,30 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+.recipe-card .card-title {
+    font-size: 1.25rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
 .recipe-content {
     max-height: 300px;
     overflow-y: auto;
     font-size: 0.9rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
 }
 
 .recipe-content h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    display: none;  /* Hide the title since we show it above */
 }
 
 .recipe-content h3 {
     font-size: 1rem;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: #4a5568;
 }
 
 .recipe-content ul, .recipe-content ol {
@@ -107,6 +138,19 @@
 
 .recipe-content li {
     margin-bottom: 0.3rem;
+}
+
+.recipe-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.recipe-metadata .badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.8em;
+    white-space: nowrap;
+    font-weight: 500;
 }
 
 .dropdown-item:hover {

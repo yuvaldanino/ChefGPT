@@ -94,26 +94,32 @@ def send_message(request, chat_id):
             messages = [
                 {"role": "system", "content": """You are ChefGPT, an expert cooking assistant. You help users with recipes, cooking techniques, and culinary advice. Be friendly, professional, and focus on providing accurate cooking information.
 
-When providing recipes, always use this format:
-<h2>🍳 [Recipe Name]</h2>
+When providing recipes, always use this format with exact spacing and line breaks:
+<h2 data-recipe="title">🍳 [Recipe Name]</h2>
 
-<h3>⏲️ Preparation Time</h3>
+<h3 data-recipe="difficulty">⚡ Difficulty</h3>
+[Easy/Medium/Hard]
+
+<h3 data-recipe="cuisine">🌍 Cuisine Type</h3>
+[Type of cuisine e.g. Italian, Mexican, Japanese, etc.]
+
+<h3 data-recipe="prep-time">⏲️ Preparation Time</h3>
 [Prep time details]
 
-<h3>👥 Servings</h3>
+<h3 data-recipe="servings">👥 Servings</h3>
 [Number of servings]
 
-<h3>📝 Ingredients</h3>
+<h3 data-recipe="ingredients">📝 Ingredients</h3>
 <ul>
 [List ingredients with measurements]
 </ul>
 
-<h3>📋 Instructions</h3>
+<h3 data-recipe="instructions">📋 Instructions</h3>
 <ol>
 [Numbered steps for cooking]
 </ol>
 
-<h3>💡 Tips</h3>
+<h3 data-recipe="tips">💡 Tips</h3>
 <ul>
 [Optional cooking tips and variations]
 </ul>"""},
@@ -159,6 +165,12 @@ def save_recipe(request, chat_id):
             title = data.get('title')
             content = data.get('content')
             
+            # Get metadata fields
+            difficulty = data.get('difficulty')
+            cuisine_type = data.get('cuisine_type')
+            prep_time = data.get('prep_time')
+            servings = data.get('servings')
+            
             if not title or not content:
                 return JsonResponse({'success': False, 'error': 'Missing title or content'})
             
@@ -174,6 +186,10 @@ def save_recipe(request, chat_id):
                 # Update existing recipe
                 existing_recipe.title = title
                 existing_recipe.content = content
+                existing_recipe.difficulty = difficulty
+                existing_recipe.cuisine_type = cuisine_type
+                existing_recipe.prep_time = prep_time
+                existing_recipe.servings = servings
                 existing_recipe.save()
                 return JsonResponse({
                     'success': True,
@@ -186,7 +202,11 @@ def save_recipe(request, chat_id):
                     user=request.user,
                     chat_session=chat_session,
                     title=title,
-                    content=content
+                    content=content,
+                    difficulty=difficulty,
+                    cuisine_type=cuisine_type,
+                    prep_time=prep_time,
+                    servings=servings
                 )
                 return JsonResponse({
                     'success': True,
