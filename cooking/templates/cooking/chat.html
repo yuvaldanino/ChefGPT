@@ -34,6 +34,9 @@
                        rows="1"
                        style="resize: none; min-height: 38px; max-height: 200px;"
                 ></textarea>
+                <button type="button" id="mic-button" class="btn btn-outline-secondary" title="Start voice input">
+                    <i class="fas fa-microphone"></i>
+                </button>
                 <button type="submit" class="btn btn-primary">
                     Send
                 </button>
@@ -235,10 +238,126 @@
 document.addEventListener('DOMContentLoaded', function() {
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
+    const micButton = document.getElementById('mic-button');
     const chatMessages = document.getElementById('chat-messages');
     const recipePlaceholder = document.getElementById('recipe-placeholder');
     const activeRecipe = document.getElementById('active-recipe');
     const saveRecipeBtn = document.getElementById('save-recipe-btn');
+
+    // Speech Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;  // Changed to true for continuous recording
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        let isRecordingSession = false;
+        let interimTranscript = '';
+        let finalTranscript = '';
+        let lastFinalTranscript = '';
+        
+        // Add auto-restart functionality
+        let shouldRestart = true;
+        
+        recognition.onstart = function() {
+            console.log('Speech recognition started');
+            micButton.classList.add('btn-danger');
+            micButton.querySelector('i').classList.remove('fa-microphone');
+            micButton.querySelector('i').classList.add('fa-stop');
+            messageInput.placeholder = 'Listening...';
+            isRecordingSession = true;
+            shouldRestart = true;
+            
+            // Store the existing input when starting new session
+            if (!finalTranscript) {
+                finalTranscript = messageInput.value;
+                lastFinalTranscript = finalTranscript;
+            }
+        };
+        
+        recognition.onend = function() {
+            console.log('Speech recognition ended');
+            // Only restart if we haven't explicitly stopped
+            if (shouldRestart && isRecordingSession) {
+                console.log('Restarting speech recognition');
+                setTimeout(() => {
+                    recognition.start();
+                }, 100);
+            } else {
+                micButton.classList.remove('btn-danger');
+                micButton.querySelector('i').classList.remove('fa-stop');
+                micButton.querySelector('i').classList.add('fa-microphone');
+                messageInput.placeholder = 'Type your message here...';
+                interimTranscript = '';
+                isRecordingSession = false;
+            }
+        };
+        
+        recognition.onresult = function(event) {
+            if (!isRecordingSession) return; // Don't process results if we're not in a session
+            
+            console.log('Got speech result:', event.results);
+            
+            // Get the latest result
+            const result = event.results[event.results.length - 1];
+            const transcript = result[0].transcript.trim();
+            
+            if (result.isFinal) {
+                // Only append if this is a new final transcript
+                if (transcript !== lastFinalTranscript) {
+                    if (finalTranscript && !finalTranscript.endsWith(' ')) {
+                        finalTranscript += ' ';
+                    }
+                    finalTranscript += transcript;
+                    lastFinalTranscript = transcript;
+                }
+                interimTranscript = '';
+                messageInput.value = finalTranscript;
+            } else {
+                // Show interim results
+                messageInput.value = finalTranscript + (finalTranscript ? ' ' : '') + transcript;
+                interimTranscript = transcript;
+            }
+            
+            // Trigger the input event to adjust textarea height
+            messageInput.dispatchEvent(new Event('input'));
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            // Only treat it as a real error if we haven't explicitly stopped
+            if (event.error !== 'aborted' || !shouldRestart) {
+                isRecordingSession = false;
+                shouldRestart = false;
+                interimTranscript = '';
+                messageInput.placeholder = 'Error: ' + event.error;
+                setTimeout(() => {
+                    messageInput.placeholder = 'Type your message here...';
+                }, 3000);
+            }
+        };
+        
+        micButton.addEventListener('click', function() {
+            if (micButton.classList.contains('btn-danger')) {
+                console.log('Stopping speech recognition');
+                shouldRestart = false;
+                isRecordingSession = false;
+                recognition.stop();
+            } else {
+                console.log('Starting speech recognition');
+                finalTranscript = '';
+                lastFinalTranscript = '';
+                shouldRestart = true;
+                recognition.start();
+            }
+        });
+    } else {
+        micButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
 
     function updateRecipeSidebar(content) {
         console.log("Checking content for recipe:", content);
