@@ -68,45 +68,61 @@
 /* Layout Styles */
 .chat-container {
     margin-left: var(--sidebar-width);
+    height: 100vh;
+    width: calc(100vw - var(--sidebar-width));
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
 }
 
 .chat-section {
-    position: fixed;
-    left: var(--sidebar-width);
-    top: 0;
-    bottom: 0;
-    width: calc((100% - var(--sidebar-width)) * 0.66);
+    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    overflow: hidden;
+    background: white;
 }
 
 .recipe-section {
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: calc((100% - var(--sidebar-width)) * 0.34);
+    width: 34%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     background-color: #f8f9fa;
     border-left: 1px solid #dee2e6;
+    overflow: hidden;
 }
 
 #chat-messages {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1rem;
 }
 
 #recipe-content {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1rem;
 }
 
 /* Existing Message Bubble Styles */
 .message-bubble {
     position: relative;
+    word-wrap: break-word;
+    max-width: 75%;
+    box-sizing: border-box;
 }
 
 .message-bubble::before {
@@ -193,18 +209,54 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .chat-container {
+        margin-left: var(--sidebar-collapsed-width);
+        width: calc(100vw - var(--sidebar-collapsed-width));
+        flex-direction: column;
+    }
+
     .chat-section {
-        position: relative;
-        width: 100%;
         height: 60vh;
+        flex: 0 0 60vh;
     }
     
     .recipe-section {
-        position: relative;
         width: 100%;
         height: 40vh;
-        border-left: none;
-        border-top: 1px solid #dee2e6;
+        flex: 0 0 40vh;
+    }
+}
+
+/* Phone-specific styles */
+@media (max-width: 480px) {
+    .chat-container {
+        margin-left: var(--sidebar-collapsed-width);
+        width: calc(100vw - var(--sidebar-collapsed-width));
+    }
+
+    .chat-section {
+        height: 50vh !important;
+        flex: 0 0 50vh;
+    }
+    
+    .recipe-section {
+        height: 50vh !important;
+        flex: 0 0 50vh;
+    }
+}
+
+/* Handle keyboard appearance */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 480px) {
+        .chat-section {
+            height: calc(50vh - var(--keyboard-height, 0px)) !important;
+            flex: 0 0 calc(50vh - var(--keyboard-height, 0px));
+        }
+        
+        .recipe-section {
+            height: calc(50vh) !important;
+            flex: 0 0 calc(50vh);
+        }
     }
 }
 
@@ -592,6 +644,36 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Handle virtual keyboard
+    let originalHeight = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+        if (window.innerHeight < originalHeight) {
+            // Keyboard is showing
+            document.documentElement.style.setProperty('--keyboard-height', `${originalHeight - window.innerHeight}px`);
+            // Scroll to bottom of chat
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+            // Keyboard is hidden
+            document.documentElement.style.setProperty('--keyboard-height', '0px');
+            originalHeight = window.innerHeight;
+        }
+    });
+
+    // Ensure messages are scrolled into view
+    const scrollToBottom = () => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    // Scroll to bottom on new messages
+    const observer = new MutationObserver(scrollToBottom);
+    observer.observe(chatMessages, { childList: true, subtree: true });
+
+    // Focus handling
+    messageInput.addEventListener('focus', () => {
+        setTimeout(scrollToBottom, 100);
+    });
 });
 </script>
 {% endblock %} 
