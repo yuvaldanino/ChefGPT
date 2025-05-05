@@ -8,18 +8,42 @@ class ChatSession(models.Model):
     title = models.CharField(max_length=255, default="New Chat")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    recipe_summary = models.TextField(null=True, blank=True)  # Stores current recipe state
+    last_summary_at = models.IntegerField(default=0)  # Message count when last summarized
+    message_count = models.IntegerField(default=0)  # Total message count for quick reference
 
     def __str__(self):
         return f"{self.user.username}'s chat - {self.title}"
 
+    def should_summarize(self):
+        # Check if we need to create a new summary
+        return self.message_count - self.last_summary_at >= 10  # Summarize every 10 messages
+
 class Message(models.Model):
+    MESSAGE_TYPES = [
+        ('recipe_creation', 'Recipe Creation'),
+        ('recipe_modification', 'Recipe Modification'),
+        ('cooking_question', 'Cooking Question'),
+        ('general_question', 'General Question'),
+        ('system', 'System Message'),
+    ]
+
     chat = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
     role = models.CharField(max_length=20)  # 'user' or 'assistant'
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES, default='general_question')
+    is_summarized = models.BooleanField(default=False)  # Track if this message is included in a summary
 
     def __str__(self):
-        return ""
+        return f"{self.role} message in {self.chat.title}"
+
+    def save(self, *args, **kwargs):
+        # If this is a new message, increment the chat's message count
+        if not self.pk:  # Only for new messages
+            self.chat.message_count += 1
+            self.chat.save()
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['created_at']

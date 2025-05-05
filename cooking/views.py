@@ -12,6 +12,7 @@ import os
 from dotenv import load_dotenv
 import json
 from django.views.decorators.http import require_POST
+from .context_manager import classify_message_type, create_conversation_summary, get_relevant_context
 
 # Load environment variables
 load_dotenv()
@@ -83,54 +84,33 @@ def send_message(request, chat_id):
         chat = get_object_or_404(ChatSession, id=chat_id, user=request.user)
         user_message = request.POST.get('message')
         
+        # Classify the message type
+        message_type = classify_message_type(user_message)
+        
         # Save user message
-        Message.objects.create(chat=chat, role='user', content=user_message)
+        Message.objects.create(
+            chat=chat,
+            role='user',
+            content=user_message,
+            message_type=message_type
+        )
         
         try:
+            # Check if we need to summarize the conversation
+            if chat.should_summarize():
+                create_conversation_summary(chat)
+            
             # Initialize OpenAI client with API key
-            client = OpenAI()  # It will automatically use OPENAI_API_KEY from environment
+            client = OpenAI()
             
-            # Format messages for OpenAI
-            messages = [
-                {"role": "system", "content": """You are ChefGPT, an expert cooking assistant. You help users with recipes, cooking techniques, and culinary advice. Be friendly, professional, and focus on providing accurate cooking information.
-
-When providing recipes, always use this format with exact spacing and line breaks:
-<h2 data-recipe="title">🍳 [Recipe Name]</h2>
-
-<h3 data-recipe="difficulty">⚡ Difficulty</h3>
-[Easy/Medium/Hard]
-
-<h3 data-recipe="cuisine">🌍 Cuisine Type</h3>
-[Type of cuisine e.g. Italian, Mexican, Japanese, etc.]
-
-<h3 data-recipe="prep-time">⏲️ Preparation Time</h3>
-[Prep time details]
-
-<h3 data-recipe="servings">👥 Servings</h3>
-[Number of servings]
-
-<h3 data-recipe="ingredients">📝 Ingredients</h3>
-<ul>
-[List ingredients with measurements]
-</ul>
-
-<h3 data-recipe="instructions">📋 Instructions</h3>
-<ol>
-[Numbered steps for cooking]
-</ol>
-
-<h3 data-recipe="tips">💡 Tips</h3>
-<ul>
-[Optional cooking tips and variations]
-</ul>"""},
-            ]
+            # Get relevant context for this message
+            messages = get_relevant_context(chat, user_message)
             
-            # Add chat history
-            for msg in chat.messages.all():
-                messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
+            # Add the current message
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
             
             # Call OpenAI API
             response = client.chat.completions.create(
@@ -143,7 +123,12 @@ When providing recipes, always use this format with exact spacing and line break
             ai_message = response.choices[0].message.content
             
             # Save AI message
-            Message.objects.create(chat=chat, role='assistant', content=ai_message)
+            Message.objects.create(
+                chat=chat,
+                role='assistant',
+                content=ai_message,
+                message_type='system' if message_type == 'recipe_creation' else message_type
+            )
             
             return JsonResponse({
                 'success': True,
