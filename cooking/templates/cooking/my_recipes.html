@@ -75,7 +75,13 @@
                             {% endif %}
                         {% endwith %}
                     </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'view_recipe' recipe.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-book-open me-2"></i>View Full Recipe
+                        </a>
+                    </div>
                 </div>
+                
                 <div class="card-footer bg-transparent">
                     <small class="text-muted">
                         <i class="far fa-calendar me-1"></i>

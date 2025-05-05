@@ -225,7 +225,18 @@ def update_sidebar_state(request):
 @login_required
 def view_recipe(request, recipe_id):
     recipe = get_object_or_404(SavedRecipe, id=recipe_id, user=request.user)
-    return render(request, 'cooking/view_recipe.html', {'recipe': recipe})
+    referer = request.META.get('HTTP_REFERER', '')
+    back_url = 'my_recipes'  # default fallback
+    
+    if 'profile' in referer:
+        back_url = 'profile'
+    elif 'my-recipes' in referer:
+        back_url = 'my_recipes'
+        
+    return render(request, 'cooking/view_recipe.html', {
+        'recipe': recipe,
+        'back_url': back_url
+    })
 
 @login_required
 def my_recipes(request):
