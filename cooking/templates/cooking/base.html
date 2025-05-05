@@ -15,11 +15,11 @@
             --background-color: #F7F7F7;
             --text-color: #2C3E50;
             --sidebar-width: 250px;
-            --sidebar-collapsed-width: 60px;
+            --sidebar-collapsed-width: 70px;
         }
 
         html.sidebar-collapsed {
-            --sidebar-width: 60px;
+            --sidebar-width: 70px;
         }
 
         body {
@@ -113,6 +113,17 @@
         .nav-link i {
             margin-right: 10px;
             font-size: 1.2rem;
+        }
+
+        .nav-link span {
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            opacity: 0;
+            width: 0;
+            display: none;
         }
 
         /* Main Content Styles */
@@ -305,24 +316,36 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'home' %}">
                     <i class="bi bi-house"></i>
-                    <span>Home</span>
+                    <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'new_chat' %}">
-                    <i class="bi bi-plus-circle"></i>
+                <a href="{% url 'my_recipes' %}" class="nav-link">
+                    <i class="fas fa-book"></i>
+                    <span>My Recipes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'chat_list' %}" class="nav-link">
+                    <i class="fas fa-comments"></i>
+                    <span>My Chats</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'new_chat' %}" class="nav-link">
+                    <i class="fas fa-plus"></i>
                     <span>New Chat</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'profile' %}">
-                    <i class="bi bi-person"></i>
+                <a href="{% url 'profile' %}" class="nav-link">
+                    <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'logout' %}">
-                    <i class="bi bi-box-arrow-right"></i>
+                <a href="{% url 'logout' %}" class="nav-link text-danger">
+                    <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>

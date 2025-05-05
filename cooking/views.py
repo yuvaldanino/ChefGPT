@@ -226,3 +226,17 @@ def update_sidebar_state(request):
 def view_recipe(request, recipe_id):
     recipe = get_object_or_404(SavedRecipe, id=recipe_id, user=request.user)
     return render(request, 'cooking/view_recipe.html', {'recipe': recipe})
+
+@login_required
+def my_recipes(request):
+    saved_recipes = SavedRecipe.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'cooking/my_recipes.html', {'saved_recipes': saved_recipes})
+
+@login_required
+def chat_list(request):
+    # Get chats that have at least one message
+    chats = ChatSession.objects.filter(
+        user=request.user,
+        messages__isnull=False  # Ensures chat has messages
+    ).distinct().order_by('-updated_at')  # distinct to avoid duplicates if multiple messages
+    return render(request, 'cooking/chat_list.html', {'chats': chats})

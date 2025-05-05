@@ -36,7 +36,7 @@ class Message(models.Model):
     is_summarized = models.BooleanField(default=False)  # Track if this message is included in a summary
 
     def __str__(self):
-        return f"{self.role} message in {self.chat.title}"
+        return ""  # Return empty string to prevent background text
 
     def save(self, *args, **kwargs):
         # If this is a new message, increment the chat's message count

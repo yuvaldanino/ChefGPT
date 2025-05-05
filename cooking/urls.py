@@ -14,4 +14,6 @@ urlpatterns = [
     path('recipe/<int:recipe_id>/delete/', views.delete_recipe, name='delete_recipe'),
     path('recipe/<int:recipe_id>/', views.view_recipe, name='view_recipe'),
     path('update-sidebar-state/', views.update_sidebar_state, name='update_sidebar_state'),
+    path('my-recipes/', views.my_recipes, name='my_recipes'),
+    path('chats/', views.chat_list, name='chat_list'),
 ] 
