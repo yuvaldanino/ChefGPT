@@ -22,8 +22,8 @@ def classify_message_type(content: str) -> str:
     
     # Check for recipe modification patterns
     if any(phrase in content_lower for phrase in [
-        "modify", "change", "adjust", "instead of", "substitute",
-        "make it", "can we", "could we", "spicier", "sweeter"
+        "modify", "change", "adjust", "instead of", "substitute","add","remove","omit",
+        "make it", "can we", "could we", "spicier", "sweeter","sour",
     ]):
         logger.info(f"Message classified as recipe_modification: {content[:50]}...")
         return "recipe_modification"
@@ -110,6 +110,7 @@ def get_relevant_context(chat_session: ChatSession, current_message: str) -> Lis
     logger.info(f"Getting context for chat session {chat_session.id}")
     
     context = []
+    message_type = classify_message_type(current_message)
     
     # First, find the most recent recipe message
     recipe_message = Message.objects.filter(
@@ -121,10 +122,42 @@ def get_relevant_context(chat_session: ChatSession, current_message: str) -> Lis
     # If we have a recipe, add it first
     if recipe_message:
         logger.info("Found and adding recipe to context")
-        context.append({
-            "role": "system",
-            "content": f"Current recipe context:\n{recipe_message.content}"
-        })
+        if message_type == "recipe_modification":
+            context.append({
+                "role": "system",
+                "content": f"""Current recipe to modify:\n{recipe_message.content}
+
+IMPORTANT: This is a recipe modification request. You MUST:
+1. Include the complete recipe with ALL sections and data-recipe attributes
+2. Start your response with the full recipe title using <h2 data-recipe="title">
+3. Keep all sections in the exact same order
+4. Maintain all HTML formatting and data attributes
+5. Only describe the modifications after the complete recipe
+
+Your response MUST follow this structure:
+<h2 data-recipe="title">🍳 [Recipe Name]</h2>
+<h3 data-recipe="difficulty">⚡ [Difficulty]</h3>
+[Difficulty level]
+<h3 data-recipe="cuisine">🌍 [Cuisine Type]</h3>
+[Cuisine]
+<h3 data-recipe="prep-time">⏲️ [Prep Time]</h3>
+[Time]
+<h3 data-recipe="servings">👥 [Servings]</h3>
+[Servings]
+<h3 data-recipe="ingredients">📝 Ingredients</h3>
+[Ingredients list]
+<h3 data-recipe="instructions">📋 Instructions</h3>
+[Instructions list]
+<h3 data-recipe="tips">💡 Tips</h3>
+[Tips list]
+
+After the recipe, you can explain the modifications made."""
+            })
+        else:
+            context.append({
+                "role": "system",
+                "content": f"Current recipe context:\n{recipe_message.content}\n\nWhen modifying this recipe, you MUST maintain the same HTML structure with data-recipe attributes. Always include the full recipe with all sections, even when making small changes."
+            })
 
     # Add the system prompt with formatting instructions only if needed
     if "recipe" in current_message.lower() or not recipe_message:
@@ -133,7 +166,7 @@ def get_relevant_context(chat_session: ChatSession, current_message: str) -> Lis
             "role": "system",
             "content": """You are ChefGPT, an expert cooking assistant. You help users with recipes, cooking techniques, and culinary advice. Be friendly, professional, and focus on providing accurate cooking information.
 
-When providing recipes, always use this format with exact spacing and line breaks:
+When providing or modifying recipes, ALWAYS use this EXACT format with data attributes:
 <h2 data-recipe="title">🍳 [Recipe Name]</h2>
 
 <h3 data-recipe="difficulty">⚡ Difficulty</h3>
