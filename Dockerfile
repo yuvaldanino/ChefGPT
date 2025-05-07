@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Create non-root user
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
-
-# Install Python dependencies
-COPY --chown=appuser:appuser requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project
 COPY --chown=appuser:appuser . .
