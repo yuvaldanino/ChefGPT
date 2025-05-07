@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 chef_gpt.wsgi:application
     volumes:
       - .:/app
     ports:
@@ -11,5 +11,6 @@ services:
     env_file:
       - .env
     environment:
-      - DEBUG=1
-      - DJANGO_SETTINGS_MODULE=chef_gpt.settings 
+      - DEBUG=0
+      - DJANGO_SETTINGS_MODULE=chef_gpt.settings_prod
+    restart: always 
