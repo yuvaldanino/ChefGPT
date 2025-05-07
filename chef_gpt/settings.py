@@ -81,15 +81,15 @@ WSGI_APPLICATION = "chef_gpt.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DB_NAME"),
-        'USER': os.getenv("DB_USER"),
-        'PASSWORD': os.getenv("DB_PASSWORD"),
-        'HOST': os.getenv("DB_HOST"),
-        'PORT': os.getenv("DB_PORT", 5432),
+        'NAME': os.getenv("SUPABASE_DB_NAME"),
+        'USER': os.getenv("SUPABASE_DB_USER"),
+        'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
+        'HOST': os.getenv("SUPABASE_DB_HOST"),
+        'PORT': os.getenv("SUPABASE_DB_PORT", 5432),
     }
 }
 
-# Comment out Supabase config for now
+# Comment out old config
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
