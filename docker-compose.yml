@@ -3,9 +3,11 @@ version: '3.8'
 services:
   web:
     build: .
-    command: gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 chef_gpt.wsgi:application
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 300 chef_gpt.wsgi:application
     volumes:
       - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     ports:
       - "8000:8000"
     env_file:
@@ -13,4 +15,8 @@ services:
     environment:
       - DEBUG=0
       - DJANGO_SETTINGS_MODULE=chef_gpt.settings_prod
-    restart: always 
+    restart: always
+
+volumes:
+  static_volume:
+  media_volume: 
