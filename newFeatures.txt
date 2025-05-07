@@ -1,11 +1,19 @@
+
+
+
 5/4 
 DONE : - add make chat responses faster 
 
 to add:
-- app workable in phone view mode. rn its horrible.
+DONE - app workable in phone view mode. rn its horrible.
 DONE : - add stuff with open ai api built in stuff. 
-- new recipes page that shows all the users recipes
-- new dashboard page. 
+DONE - new recipes page that shows all the users recipes
+DONE - new dashboard page. 
+
+to ADD 
+- social media - you can choose to post a recipe and people can give it likes 
+- maybe it can recommend recipes to you 
+- maybe ways to add more advned tech 
 
 5/3
 - basically made a bunch of the backend 
