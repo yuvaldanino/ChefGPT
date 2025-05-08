@@ -32,12 +32,8 @@ services:
       - POSTGRES_PASSWORD=${SUPABASE_DB_PASSWORD}
 
   nginx:
-    image: nginx:latest
+    build: ./nginx
     volumes:
-      - type: bind
-        source: ./nginx/nginx.conf
-        target: /etc/nginx/conf.d/default.conf
-        read_only: true
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
