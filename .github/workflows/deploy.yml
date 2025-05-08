@@ -14,6 +14,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: /tmp/deploy_key
           script: |
             cd ~/chefgpt
             git pull
