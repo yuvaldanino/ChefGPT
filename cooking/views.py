@@ -76,7 +76,8 @@ def new_chat(request):
 def chat_view(request, chat_id):
     chat = get_object_or_404(ChatSession, id=chat_id, user=request.user)
     messages = chat.messages.all()
-    return render(request, 'cooking/chat.html', {'chat': chat, 'messages': messages})
+    user = request.user
+    return render(request, 'cooking/chat.html', {'chat': chat, 'messages': messages, 'user': user})
 
 @login_required
 def send_message(request, chat_id):

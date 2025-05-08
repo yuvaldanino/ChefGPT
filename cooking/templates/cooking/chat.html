@@ -6,7 +6,17 @@
     <div class="chat-section">
         <!-- Chat Header -->
         <div class="bg-white border-bottom p-3">
-            <h1 class="h4 mb-0">Chat #{{ chat.id }}</h1>
+            <h1 class="h4 mb-0">
+                {% if user %}
+                    {% if user.first_name %}
+                        {{ user.first_name }}'s Chat
+                    {% else %}
+                        {{ user.username }}'s Chat
+                    {% endif %}
+                {% else %}
+                    Chat
+                {% endif %}
+            </h1>
         </div>
 
         <!-- Chat Messages -->
