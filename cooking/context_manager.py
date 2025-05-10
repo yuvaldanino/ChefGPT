@@ -204,19 +204,33 @@ When providing or modifying recipes, ALWAYS use this EXACT format with data attr
             "content": "You are ChefGPT, an expert cooking assistant. Help with cooking techniques and answer questions about the current recipe."
         })
 
-    # Get recent relevant messages
+    # Get recent relevant messages with token limit
     recent_messages = Message.objects.filter(
         chat=chat_session
-    ).order_by('-created_at')[:4]
+    ).order_by('-created_at')
     
-    logger.info(f"Adding {recent_messages.count()} recent messages to context")
+    total_tokens = 0
+    selected_messages = []
+    
+    # Add messages until we hit token limit or message limit
+    for msg in recent_messages:
+        msg_tokens = len(msg.content.split())
+        if total_tokens + msg_tokens > 2000 or len(selected_messages) >= 6:  # Token limit and message limit
+            break
+        selected_messages.append(msg)
+        total_tokens += msg_tokens
+    
+    logger.info(f"Adding {len(selected_messages)} recent messages to context")
     
     # Add them in chronological order
-    for msg in reversed(recent_messages):
+    for msg in reversed(selected_messages):
         context.append({
             "role": msg.role,
             "content": msg.content
         })
     
-    logger.info(f"Total context messages: {len(context)}")
+    # Log context size
+    total_tokens = sum(len(msg["content"].split()) for msg in context)
+    logger.info(f"Total context messages: {len(context)}, estimated tokens: {total_tokens}")
+    
     return context 

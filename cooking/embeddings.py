@@ -1,23 +1,12 @@
 from langchain_openai import OpenAIEmbeddings
 import os
 from dotenv import load_dotenv
-import psycopg2
-from psycopg2.extras import Json
+from .db_connection import get_db_connection
 
 load_dotenv()
 
 # Initialize OpenAI embeddings
 embeddings = OpenAIEmbeddings()
-
-def get_db_connection():
-    """Get a database connection using environment variables."""
-    return psycopg2.connect(
-        dbname=os.getenv('SUPABASE_DB_NAME'),
-        user=os.getenv('SUPABASE_DB_USER'),
-        password=os.getenv('SUPABASE_DB_PASSWORD'),
-        host=os.getenv('SUPABASE_DB_HOST'),
-        port=os.getenv('SUPABASE_DB_PORT')
-    )
 
 def generate_recipe_embedding(recipe):
     """

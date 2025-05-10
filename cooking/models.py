@@ -17,7 +17,7 @@ class ChatSession(models.Model):
 
     def should_summarize(self):
         # Check if we need to create a new summary
-        return self.message_count - self.last_summary_at >= 10  # Summarize every 10 messages
+        return self.message_count - self.last_summary_at >= 20  # Summarize every 20 messages instead of 10
 
 class Message(models.Model):
     MESSAGE_TYPES = [
@@ -60,6 +60,9 @@ class SavedRecipe(models.Model):
     cuisine_type = models.CharField(max_length=100, null=True, blank=True)
     prep_time = models.CharField(max_length=50, null=True, blank=True)
     servings = models.CharField(max_length=50, null=True, blank=True)
+    
+    # Link to recipe embedding
+    embedding_id = models.BigIntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

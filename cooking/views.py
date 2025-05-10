@@ -14,9 +14,24 @@ import json
 from django.views.decorators.http import require_POST
 from .context_manager import classify_message_type, create_conversation_summary, get_relevant_context
 from .langchain_setup import get_recipe_response
+from .embeddings import generate_recipe_embedding, store_recipe_embedding
+from .db_connection import get_db_connection
 
 # Load environment variables
 load_dotenv()
+
+# Constants for validation
+MAX_MESSAGE_LENGTH = 1000
+MAX_CHAT_SESSIONS = 50
+MAX_RECIPES_PER_USER = 100
+MAX_RECIPES_PER_CHAT = 10
+MAX_RECIPE_TITLE_LENGTH = 200
+MAX_RECIPE_CONTENT_LENGTH = 10000
+MAX_RECIPE_DIFFICULTY_LENGTH = 50
+MAX_RECIPE_CUISINE_LENGTH = 100
+MAX_RECIPE_PREP_TIME_LENGTH = 50
+MAX_RECIPE_SERVINGS_LENGTH = 50
+MAX_RECIPE_EMBEDDING_ID_LENGTH = 100
 
 @login_required
 def home(request):
@@ -145,6 +160,20 @@ def save_recipe(request, chat_id):
             
             chat_session = get_object_or_404(ChatSession, id=chat_id, user=request.user)
             
+            # Prepare recipe data for embedding
+            recipe_data = {
+                'title': title,
+                'cuisine': cuisine_type,
+                'difficulty': difficulty,
+                'ingredients': extract_ingredients(content),
+                'instructions': extract_instructions(content),
+                'tips': extract_tips(content)
+            }
+            
+            # Generate and store embedding
+            recipe_with_embedding = generate_recipe_embedding(recipe_data)
+            stored_embedding = store_recipe_embedding(recipe_with_embedding)
+            
             # Check if recipe already exists for this chat
             existing_recipe = SavedRecipe.objects.filter(
                 chat_session=chat_session,
@@ -159,6 +188,7 @@ def save_recipe(request, chat_id):
                 existing_recipe.cuisine_type = cuisine_type
                 existing_recipe.prep_time = prep_time
                 existing_recipe.servings = servings
+                existing_recipe.embedding_id = stored_embedding['id']
                 existing_recipe.save()
                 return JsonResponse({
                     'success': True,
@@ -175,7 +205,8 @@ def save_recipe(request, chat_id):
                     difficulty=difficulty,
                     cuisine_type=cuisine_type,
                     prep_time=prep_time,
-                    servings=servings
+                    servings=servings,
+                    embedding_id=stored_embedding['id']
                 )
                 return JsonResponse({
                     'success': True,
@@ -188,12 +219,97 @@ def save_recipe(request, chat_id):
             
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
+def extract_ingredients(content):
+    """Extract ingredients from recipe content."""
+    try:
+        # Find the ingredients section
+        start = content.find('<h3 data-recipe="ingredients">')
+        if start == -1:
+            return []
+        
+        # Find the end of ingredients section
+        end = content.find('<h3 data-recipe="instructions">')
+        if end == -1:
+            end = content.find('<h3 data-recipe="tips">')
+        
+        if end == -1:
+            return []
+        
+        # Extract the ingredients list
+        ingredients_section = content[start:end]
+        # Remove HTML tags and split into lines
+        ingredients = [line.strip() for line in ingredients_section.split('\n') 
+                      if line.strip() and not line.startswith('<')]
+        return ingredients
+    except Exception:
+        return []
+
+def extract_instructions(content):
+    """Extract instructions from recipe content."""
+    try:
+        # Find the instructions section
+        start = content.find('<h3 data-recipe="instructions">')
+        if start == -1:
+            return []
+        
+        # Find the end of instructions section
+        end = content.find('<h3 data-recipe="tips">')
+        if end == -1:
+            return []
+        
+        # Extract the instructions list
+        instructions_section = content[start:end]
+        # Remove HTML tags and split into lines
+        instructions = [line.strip() for line in instructions_section.split('\n') 
+                       if line.strip() and not line.startswith('<')]
+        return instructions
+    except Exception:
+        return []
+
+def extract_tips(content):
+    """Extract tips from recipe content."""
+    try:
+        # Find the tips section
+        start = content.find('<h3 data-recipe="tips">')
+        if start == -1:
+            return []
+        
+        # Extract the tips list
+        tips_section = content[start:]
+        # Remove HTML tags and split into lines
+        tips = [line.strip() for line in tips_section.split('\n') 
+                if line.strip() and not line.startswith('<')]
+        return tips
+    except Exception:
+        return []
+
 @login_required
 def delete_recipe(request, recipe_id):
     if request.method == 'POST':
-        recipe = get_object_or_404(SavedRecipe, id=recipe_id, user=request.user)
-        recipe.delete()
-        return JsonResponse({'success': True})
+        try:
+            # Get the recipe and verify ownership
+            recipe = get_object_or_404(SavedRecipe, id=recipe_id, user=request.user)
+            
+            # Delete the embedding from Supabase if it exists
+            if recipe.embedding_id:
+                try:
+                    # Connect to database and delete embedding
+                    with get_db_connection() as conn:
+                        with conn.cursor() as cur:
+                            cur.execute("""
+                                DELETE FROM public.recipe_embeddings 
+                                WHERE id = %s
+                            """, (recipe.embedding_id,))
+                            conn.commit()
+                except Exception as e:
+                    print(f"Error deleting embedding: {str(e)}")
+                    # Continue with recipe deletion even if embedding deletion fails
+            
+            # Delete the recipe from Django database
+            recipe.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @require_POST
