@@ -22,8 +22,9 @@ def classify_message_type(content: str) -> str:
     
     # Check for recipe modification patterns
     if any(phrase in content_lower for phrase in [
-        "modify", "change", "adjust", "instead of", "substitute","add","remove","omit",
-        "make it", "can we", "could we", "spicier", "sweeter","sour",
+        "modify", "change", "adjust", "instead of", "substitute", "add", "remove", "omit",
+        "make it", "can we", "could we", "spicier", "sweeter", "sour", "less", "more",
+        "gluten-free", "vegan", "vegetarian", "healthy", "lighter", "dairy-free"
     ]):
         logger.info(f"Message classified as recipe_modification: {content[:50]}...")
         return "recipe_modification"

@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import json
 from django.views.decorators.http import require_POST
 from .context_manager import classify_message_type, create_conversation_summary, get_relevant_context
+from .langchain_setup import get_recipe_response
 
 # Load environment variables
 load_dotenv()
@@ -101,54 +102,21 @@ def send_message(request, chat_id):
             if chat.should_summarize():
                 create_conversation_summary(chat)
             
-            # Get relevant context for this message
-            messages = get_relevant_context(chat, user_message)
+            # Get response using LangChain
+            ai_message = get_recipe_response(chat, user_message)
             
-            # Add the current message
-            messages.append({
-                "role": "user",
-                "content": user_message
-            })
-            
-            # Call OpenAI API directly using requests
-            headers = {
-                "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "model": "gpt-3.5-turbo",
-                "messages": messages,
-                "temperature": 0.7
-            }
-            
-            response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data
+            # Save AI message
+            Message.objects.create(
+                chat=chat,
+                role='assistant',
+                content=ai_message,
+                message_type='system' if message_type == 'recipe_creation' else message_type
             )
             
-            if response.status_code == 200:
-                response_data = response.json()
-                ai_message = response_data['choices'][0]['message']['content']
-                
-                # Save AI message
-                Message.objects.create(
-                    chat=chat,
-                    role='assistant',
-                    content=ai_message,
-                    message_type='system' if message_type == 'recipe_creation' else message_type
-                )
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': ai_message
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'OpenAI API error: {response.text}'
-                })
+            return JsonResponse({
+                'success': True,
+                'message': ai_message
+            })
                 
         except Exception as e:
             return JsonResponse({
