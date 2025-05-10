@@ -5,8 +5,8 @@ from .db_connection import get_db_connection
 
 load_dotenv()
 
-# Initialize OpenAI embeddings
-embeddings = OpenAIEmbeddings()
+# Initialize OpenAI embeddings with minimal configuration
+embeddings = OpenAIEmbeddings()  # Let it use default configuration
 
 def generate_recipe_embedding(recipe):
     """
