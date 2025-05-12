@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from django.core.exceptions import PermissionDenied
 import traceback
+from django.conf import settings
 
 # Load environment variables
 load_dotenv()
@@ -62,7 +63,6 @@ def root_view(request):
         print(f"Using host: {host}")
         
         # Check if the host is allowed
-        from django.conf import settings
         print(f"Allowed hosts: {settings.ALLOWED_HOSTS}")
         if host not in settings.ALLOWED_HOSTS and not any(host.endswith(h.replace('*', '')) for h in settings.ALLOWED_HOSTS if '*' in h):
             print(f"Host {host} not in allowed hosts")
@@ -416,10 +416,18 @@ def health_check(request):
 
 def debug_view(request):
     """Debug view to check request headers."""
-    headers = {
+    debug_info = {
         'Host': request.get_host(),
+        'Raw Host': request.META.get('HTTP_HOST'),
         'X-Forwarded-Host': request.headers.get('X-Forwarded-Host'),
         'X-Forwarded-Proto': request.headers.get('X-Forwarded-Proto'),
         'X-Forwarded-Port': request.headers.get('X-Forwarded-Port'),
+        'All Headers': dict(request.headers),
+        'META': {k: v for k, v in request.META.items() if k.startswith('HTTP_')},
+        'ALLOWED_HOSTS': settings.ALLOWED_HOSTS,
     }
-    return HttpResponse(f"Debug Info: {headers}")
+    print("=" * 80)
+    print("Debug View Called")
+    print(f"Debug Info: {debug_info}")
+    print("=" * 80)
+    return HttpResponse(f"Debug Info: {debug_info}")
