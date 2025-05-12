@@ -35,6 +35,12 @@ MAX_RECIPE_PREP_TIME_LENGTH = 50
 MAX_RECIPE_SERVINGS_LENGTH = 50
 MAX_RECIPE_EMBEDDING_ID_LENGTH = 100
 
+def root_view(request):
+    """Root view that redirects to login if not authenticated."""
+    if request.user.is_authenticated:
+        return redirect('home')
+    return redirect('login')
+
 @login_required
 def home(request):
     saved_recipes = SavedRecipe.objects.filter(user=request.user)
