@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'web',
     'web:8000',
+    '18.212.254.13',  # EC2 IP
     'chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com',
     '*.amazonaws.com',
     '*.compute.amazonaws.com',
