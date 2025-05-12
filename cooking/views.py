@@ -37,6 +37,13 @@ MAX_RECIPE_EMBEDDING_ID_LENGTH = 100
 
 def root_view(request):
     """Root view that redirects to login if not authenticated."""
+    print(f"Root view called. User authenticated: {request.user.is_authenticated}")
+    print(f"Request headers: {request.headers}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Request GET params: {request.GET}")
+    print(f"Request POST params: {request.POST}")
+    
     if request.user.is_authenticated:
         return redirect('home')
     return redirect('login')
