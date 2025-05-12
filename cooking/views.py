@@ -16,6 +16,8 @@ from .context_manager import classify_message_type, create_conversation_summary,
 from .langchain_setup import get_recipe_response
 from .embeddings import generate_recipe_embedding, store_recipe_embedding
 from .db_connection import get_db_connection
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -352,6 +354,9 @@ def chat_list(request):
     ).distinct().order_by('-updated_at')  # distinct to avoid duplicates if multiple messages
     return render(request, 'cooking/chat_list.html', {'chats': chats})
 
+@csrf_exempt
 def health_check(request):
-    """Health check endpoint for load balancer."""
-    return JsonResponse({"status": "healthy"})
+    return JsonResponse({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    })
