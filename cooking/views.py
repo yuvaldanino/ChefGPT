@@ -46,6 +46,18 @@ def root_view(request):
         print(f"Request POST params: {request.POST}")
         print(f"Request META: {request.META}")
         
+        # Get the host from various possible headers
+        host = (
+            request.META.get('HTTP_HOST') or
+            request.META.get('SERVER_NAME') or
+            request.META.get('REMOTE_ADDR') or
+            'localhost'
+        )
+        print(f"Using host: {host}")
+        
+        # Set the host in the request
+        request.META['HTTP_HOST'] = host
+        
         if request.user.is_authenticated:
             return redirect('home')
         return redirect('login')
