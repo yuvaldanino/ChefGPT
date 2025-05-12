@@ -18,6 +18,8 @@ from .embeddings import generate_recipe_embedding, store_recipe_embedding
 from .db_connection import get_db_connection
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
+from django.core.exceptions import PermissionDenied
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -40,7 +42,9 @@ MAX_RECIPE_EMBEDDING_ID_LENGTH = 100
 def root_view(request):
     """Root view that redirects to login if not authenticated."""
     try:
-        print(f"Root view called. User authenticated: {request.user.is_authenticated}")
+        print("=" * 80)
+        print("Root view called")
+        print(f"User authenticated: {request.user.is_authenticated}")
         print(f"Request headers: {request.headers}")
         print(f"Request method: {request.method}")
         print(f"Request path: {request.path}")
@@ -56,6 +60,13 @@ def root_view(request):
             'localhost'
         )
         print(f"Using host: {host}")
+        
+        # Check if the host is allowed
+        from django.conf import settings
+        print(f"Allowed hosts: {settings.ALLOWED_HOSTS}")
+        if host not in settings.ALLOWED_HOSTS and not any(host.endswith(h.replace('*', '')) for h in settings.ALLOWED_HOSTS if '*' in h):
+            print(f"Host {host} not in allowed hosts")
+            raise PermissionDenied(f"Host {host} not allowed")
         
         # Set the host in the request
         request.META['HTTP_HOST'] = host
@@ -75,6 +86,8 @@ def root_view(request):
         return response
     except Exception as e:
         print(f"Error in root_view: {str(e)}")
+        print("Traceback:")
+        print(traceback.format_exc())
         return JsonResponse({"error": str(e)}, status=500)
 
 @login_required

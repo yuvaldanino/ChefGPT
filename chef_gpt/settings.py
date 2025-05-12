@@ -213,5 +213,10 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'django.security': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
