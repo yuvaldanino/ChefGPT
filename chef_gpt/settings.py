@@ -34,11 +34,14 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'web',
     'web:8000',
+    'chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com',  # Specific ALB DNS
     '*.amazonaws.com',
     '*.compute.amazonaws.com',
     '*.compute-1.amazonaws.com',
     '*.elb.amazonaws.com',
     '*.elasticbeanstalk.com',
+    '*.internal',
+    '*.local',
 ]
 
 # CSRF settings
@@ -49,6 +52,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:80',
     'http://web',
     'http://web:8000',
+    'http://chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com',  # Specific ALB DNS
     'http://*.amazonaws.com',
     'http://*.compute.amazonaws.com',
     'http://*.compute-1.amazonaws.com',
@@ -214,6 +218,11 @@ LOGGING = {
             'propagate': True,
         },
         'django.security': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.db.backends': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
