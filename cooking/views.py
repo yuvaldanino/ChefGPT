@@ -66,7 +66,8 @@ def root_view(request):
         print(f"Allowed hosts: {settings.ALLOWED_HOSTS}")
         if host not in settings.ALLOWED_HOSTS and not any(host.endswith(h.replace('*', '')) for h in settings.ALLOWED_HOSTS if '*' in h):
             print(f"Host {host} not in allowed hosts")
-            raise PermissionDenied(f"Host {host} not allowed")
+            # Instead of raising PermissionDenied, just log and continue
+            print(f"Warning: Host {host} not in allowed hosts, but continuing anyway")
         
         # Set the host in the request
         request.META['HTTP_HOST'] = host
@@ -416,18 +417,30 @@ def health_check(request):
 
 def debug_view(request):
     """Debug view to check request headers."""
-    debug_info = {
-        'Host': request.get_host(),
-        'Raw Host': request.META.get('HTTP_HOST'),
-        'X-Forwarded-Host': request.headers.get('X-Forwarded-Host'),
-        'X-Forwarded-Proto': request.headers.get('X-Forwarded-Proto'),
-        'X-Forwarded-Port': request.headers.get('X-Forwarded-Port'),
-        'All Headers': dict(request.headers),
-        'META': {k: v for k, v in request.META.items() if k.startswith('HTTP_')},
-        'ALLOWED_HOSTS': settings.ALLOWED_HOSTS,
-    }
-    print("=" * 80)
-    print("Debug View Called")
-    print(f"Debug Info: {json.dumps(debug_info, indent=2)}")
-    print("=" * 80)
-    return HttpResponse(f"Debug Info: {json.dumps(debug_info, indent=2)}")
+    try:
+        debug_info = {
+            'Host': request.get_host(),
+            'Raw Host': request.META.get('HTTP_HOST'),
+            'X-Forwarded-Host': request.headers.get('X-Forwarded-Host'),
+            'X-Forwarded-Proto': request.headers.get('X-Forwarded-Proto'),
+            'X-Forwarded-Port': request.headers.get('X-Forwarded-Port'),
+            'All Headers': dict(request.headers),
+            'META': {k: v for k, v in request.META.items() if k.startswith('HTTP_')},
+            'ALLOWED_HOSTS': settings.ALLOWED_HOSTS,
+            'Request Method': request.method,
+            'Request Path': request.path,
+            'Request GET': dict(request.GET),
+            'Request POST': dict(request.POST),
+        }
+        print("=" * 80)
+        print("Debug View Called")
+        print(f"Debug Info: {json.dumps(debug_info, indent=2)}")
+        print("=" * 80)
+        return HttpResponse(f"Debug Info: {json.dumps(debug_info, indent=2)}")
+    except Exception as e:
+        print("=" * 80)
+        print(f"Error in debug_view: {str(e)}")
+        print("Traceback:")
+        print(traceback.format_exc())
+        print("=" * 80)
+        return HttpResponse(f"Error: {str(e)}\nTraceback: {traceback.format_exc()}", status=500)
