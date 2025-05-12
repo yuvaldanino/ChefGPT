@@ -92,7 +92,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'cooking.middleware.HostValidationMiddleware',  # Add our custom middleware
 ]
 
 ROOT_URLCONF = "chef_gpt.urls"
@@ -217,16 +216,6 @@ LOGGING = {
             'propagate': True,
         },
         'django.server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'django.security': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'django.db.backends': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
