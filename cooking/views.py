@@ -351,3 +351,7 @@ def chat_list(request):
         messages__isnull=False  # Ensures chat has messages
     ).distinct().order_by('-updated_at')  # distinct to avoid duplicates if multiple messages
     return render(request, 'cooking/chat_list.html', {'chats': chats})
+
+def health_check(request):
+    """Health check endpoint for load balancer."""
+    return JsonResponse({"status": "healthy"})
