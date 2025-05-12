@@ -31,6 +31,27 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']  # Allow all hosts for now, we can restrict this later
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'http://localhost:80',
+    'http://127.0.0.1',
+    'http://127.0.0.1:80',
+    'http://*.amazonaws.com',
+    'http://*.compute.amazonaws.com',
+    'http://*.compute-1.amazonaws.com',
+    'http://*.elb.amazonaws.com',
+    'http://*.elasticbeanstalk.com',
+]
+
+# Security settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+# Session settings
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = False    # Set to True in production with HTTPS
 
 # Application definition
 

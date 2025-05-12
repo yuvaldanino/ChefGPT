@@ -11,7 +11,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from .context_manager import classify_message_type, create_conversation_summary, get_relevant_context
 from .langchain_setup import get_recipe_response
 from .embeddings import generate_recipe_embedding, store_recipe_embedding
@@ -35,6 +35,8 @@ MAX_RECIPE_PREP_TIME_LENGTH = 50
 MAX_RECIPE_SERVINGS_LENGTH = 50
 MAX_RECIPE_EMBEDDING_ID_LENGTH = 100
 
+@csrf_exempt
+@require_http_methods(["GET"])
 def root_view(request):
     """Root view that redirects to login if not authenticated."""
     try:
@@ -58,9 +60,19 @@ def root_view(request):
         # Set the host in the request
         request.META['HTTP_HOST'] = host
         
+        # Check if user is authenticated
         if request.user.is_authenticated:
             return redirect('home')
-        return redirect('login')
+        
+        # If not authenticated, redirect to login
+        response = redirect('login')
+        
+        # Set session cookie options
+        response.set_cookie('sessionid', request.session.session_key or '', 
+                          samesite='Lax', 
+                          secure=False)  # Set to True in production with HTTPS
+        
+        return response
     except Exception as e:
         print(f"Error in root_view: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
