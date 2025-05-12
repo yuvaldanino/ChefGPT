@@ -29,7 +29,22 @@ SECRET_KEY = "django-insecure-2j_q=j9%vgat&4v9ccgu4)*#49y@5!j5+&jsck-))53c#g+ll&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Allow all hosts temporarily
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'web',
+    'web:8000',
+    'chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com',
+    '*.amazonaws.com',
+    '*.compute.amazonaws.com',
+    '*.compute-1.amazonaws.com',
+    '*.elb.amazonaws.com',
+    '*.elasticbeanstalk.com',
+    '*.internal',
+    '*.local',
+    '172.18.0.3',  # Docker container IP
+    '172.31.0.0/16',  # AWS VPC CIDR
+]
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [

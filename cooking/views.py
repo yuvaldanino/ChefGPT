@@ -428,6 +428,6 @@ def debug_view(request):
     }
     print("=" * 80)
     print("Debug View Called")
-    print(f"Debug Info: {debug_info}")
+    print(f"Debug Info: {json.dumps(debug_info, indent=2)}")
     print("=" * 80)
-    return HttpResponse(f"Debug Info: {debug_info}")
+    return HttpResponse(f"Debug Info: {json.dumps(debug_info, indent=2)}")
