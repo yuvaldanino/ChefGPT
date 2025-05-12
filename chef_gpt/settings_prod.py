@@ -8,8 +8,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # Update allowed hosts with your domain and IP
 ALLOWED_HOSTS = [
-    os.getenv('DOMAIN_NAME', 'localhost'),
-    '18.212.254.13',  # Your EC2 IP
+    '18.212.254.13',  # EC2 IP
+    'chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com',  # ALB hostname
     'localhost',
     '127.0.0.1'
 ]
