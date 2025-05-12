@@ -29,7 +29,17 @@ SECRET_KEY = "django-insecure-2j_q=j9%vgat&4v9ccgu4)*#49y@5!j5+&jsck-))53c#g+ll&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Allow all hosts for now, we can restrict this later
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'web',
+    'web:8000',
+    '*.amazonaws.com',
+    '*.compute.amazonaws.com',
+    '*.compute-1.amazonaws.com',
+    '*.elb.amazonaws.com',
+    '*.elasticbeanstalk.com',
+]
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
@@ -37,6 +47,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:80',
     'http://127.0.0.1',
     'http://127.0.0.1:80',
+    'http://web',
+    'http://web:8000',
     'http://*.amazonaws.com',
     'http://*.compute.amazonaws.com',
     'http://*.compute-1.amazonaws.com',
