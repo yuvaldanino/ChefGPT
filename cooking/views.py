@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .forms import CustomUserCreationForm
 from .models import ChatSession, Message, SavedRecipe
 import requests
@@ -413,3 +413,13 @@ def chat_list(request):
 def health_check(request):
     """Simple health check endpoint for load balancer."""
     return JsonResponse({"status": "healthy"}, status=200)
+
+def debug_view(request):
+    """Debug view to check request headers."""
+    headers = {
+        'Host': request.get_host(),
+        'X-Forwarded-Host': request.headers.get('X-Forwarded-Host'),
+        'X-Forwarded-Proto': request.headers.get('X-Forwarded-Proto'),
+        'X-Forwarded-Port': request.headers.get('X-Forwarded-Port'),
+    }
+    return HttpResponse(f"Debug Info: {headers}")

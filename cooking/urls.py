@@ -18,4 +18,5 @@ urlpatterns = [
     path('chat-list/', views.chat_list, name='chat_list'),
     path('update-sidebar-state/', views.update_sidebar_state, name='update_sidebar_state'),
     path('health/', views.health_check, name='health_check'),
+    path('debug/', views.debug_view, name='debug'),
 ] 
