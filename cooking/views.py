@@ -356,7 +356,16 @@ def chat_list(request):
 
 @csrf_exempt
 def health_check(request):
+    # Add debug logging
+    print(f"Health check request from: {request.META.get('REMOTE_ADDR')}")
+    print(f"Request headers: {request.headers}")
+    
     return JsonResponse({
         "status": "healthy",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "request_info": {
+            "remote_addr": request.META.get('REMOTE_ADDR'),
+            "host": request.META.get('HTTP_HOST'),
+            "user_agent": request.META.get('HTTP_USER_AGENT')
+        }
     })
