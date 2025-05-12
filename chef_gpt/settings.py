@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-2j_q=j9%vgat&4v9ccgu4)*#49y@5!j5+&jsck-))53c#g+ll&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Temporarily allow all hosts for testing
+ALLOWED_HOSTS = ['*']  # Allow all hosts temporarily
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
@@ -77,6 +77,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'cooking.middleware.HostValidationMiddleware',  # Add our custom middleware
 ]
 
 ROOT_URLCONF = "chef_gpt.urls"
