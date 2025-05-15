@@ -450,21 +450,26 @@ def debug_view(request):
 def vllm_connect_view(request):
     """View for connecting to the vLLM server"""
     print(f"vllm_connect_view called by user: {request.user.username}")
-    print(f"User is staff: {request.user.is_staff}")
-    print(f"User is superuser: {request.user.is_superuser}")
+    print(f"Request method: {request.method}")
     
     if request.method == 'POST':
         try:
+            print(f"Request body: {request.body}")
             data = json.loads(request.body)
             ip_address = data.get('ip_address')
+            print(f"IP address: {ip_address}")
             
             if not ip_address:
                 return JsonResponse({'error': 'No IP address provided'}, status=400)
             
             # Store IP in Django session
             request.session['vllm_server_ip'] = ip_address
+            print(f"Stored IP in session: {request.session['vllm_server_ip']}")
             return JsonResponse({'success': True})
             
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         except Exception as e:
             print(f"Error in vllm_connect_view POST: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)

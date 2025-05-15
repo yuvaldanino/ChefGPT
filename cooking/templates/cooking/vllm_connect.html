@@ -119,6 +119,7 @@ document.getElementById('connection-form').addEventListener('submit', async func
         
         if (data.status === 'healthy' && data.model_loaded) {
             // Store the IP in Django session
+            console.log('Storing IP in session...');
             const storeResponse = await fetch("{% url 'vllm_connect' %}", {
                 method: 'POST',
                 headers: {
@@ -128,12 +129,15 @@ document.getElementById('connection-form').addEventListener('submit', async func
                 body: JSON.stringify({ ip_address: ipAddress })
             });
             
+            console.log('Store response status:', storeResponse.status);
+            const storeData = await storeResponse.json();
+            console.log('Store response data:', storeData);
+            
             if (storeResponse.ok) {
-                // Redirect to chat
+                console.log('Successfully stored IP, redirecting to chat...');
                 window.location.href = "{% url 'vllm_chat' %}";
             } else {
-                const errorData = await storeResponse.json();
-                throw new Error(errorData.error || 'Failed to store IP address');
+                throw new Error(storeData.error || 'Failed to store IP address');
             }
         } else {
             throw new Error('API is not healthy');
