@@ -21,6 +21,7 @@ from datetime import datetime
 from django.core.exceptions import PermissionDenied
 import traceback
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Load environment variables
 load_dotenv()
@@ -444,3 +445,23 @@ def debug_view(request):
         print(traceback.format_exc())
         print("=" * 80)
         return HttpResponse(f"Error: {str(e)}\nTraceback: {traceback.format_exc()}", status=500)
+
+@staff_member_required
+def vllm_chat_view(request):
+    if request.method == 'GET':
+        return render(request, 'cooking/vllm_chat.html')
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            message = data.get('message')
+            
+            # TODO: Add the actual API call to your vLLM server
+            # For now, return a placeholder response
+            response = {
+                'response': 'This is a placeholder response. The vLLM API integration will be added next.'
+            }
+            
+            return JsonResponse(response)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
