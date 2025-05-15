@@ -120,12 +120,18 @@ document.getElementById('connection-form').addEventListener('submit', async func
         if (data.status === 'healthy' && data.model_loaded) {
             // Store the IP in Django session
             console.log('Storing IP in session...');
-            const storeResponse = await fetch("{% url 'vllm_connect' %}", {
+            const storeUrl = "{% url 'vllm_connect' %}";
+            console.log('Store URL:', storeUrl);
+            console.log('CSRF Token:', csrfToken);
+            
+            const storeResponse = await fetch(storeUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ ip_address: ipAddress })
             });
             

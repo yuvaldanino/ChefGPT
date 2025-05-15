@@ -453,6 +453,7 @@ def vllm_connect_view(request):
     print(f"Request method: {request.method}")
     print(f"Request path: {request.path}")
     print(f"Request headers: {request.headers}")
+    print(f"CSRF token: {request.headers.get('X-CSRFToken')}")
     
     if request.method == 'POST':
         try:
