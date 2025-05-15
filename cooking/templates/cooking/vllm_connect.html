@@ -131,7 +131,7 @@ document.getElementById('connection-form').addEventListener('submit', async func
                     'X-CSRFToken': csrfToken,
                     'Accept': 'application/json'
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify({ ip_address: ipAddress })
             });
             
