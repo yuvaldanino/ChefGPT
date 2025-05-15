@@ -120,7 +120,7 @@ document.getElementById('connection-form').addEventListener('submit', async func
         if (data.status === 'healthy' && data.model_loaded) {
             // Store the IP in Django session
             console.log('Storing IP in session...');
-            const storeUrl = window.location.origin + "{% url 'vllm_connect' %}";
+            const storeUrl = window.location.origin + "{% url 'vllm_connect' %}".replace(/\/$/, '');
             console.log('Store URL:', storeUrl);
             console.log('CSRF Token:', csrfToken);
             
