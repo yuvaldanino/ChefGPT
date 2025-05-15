@@ -2,10 +2,10 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]  # Triggers on push to main branch
+    branches: [ main ]
 
 jobs:
-  deploy:
+  deploy-ec2-1:
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH key
@@ -15,7 +15,7 @@ jobs:
           known_hosts: unnecessary
           if_key_exists: replace
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 Instance 1
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -23,6 +23,29 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/chefgpt
-            git pull
+            git pull origin main
             docker-compose down
-            docker-compose up --build -d 
+            docker-compose up --build -d
+
+  deploy-ec2-2:
+    needs: deploy-ec2-1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.EC2_SSH_KEY }}
+          known_hosts: unnecessary
+          if_key_exists: replace
+
+      - name: Deploy to EC2 Instance 2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_2 }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/chefgpt
+            git pull origin main
+            docker-compose down
+            docker-compose up --build -d

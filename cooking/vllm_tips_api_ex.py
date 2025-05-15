@@ -22,9 +22,10 @@ app = FastAPI(title="Cooking Tips API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://chefgpt-alb-123456789.us-east-1.elb.amazonaws.com",  # Your ALB DNS
+        "http://chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com",  # Your ALB DNS
         "http://localhost:8000",  # For local development
-        "http://127.0.0.1:8000"   # For local development
+        "http://127.0.0.1:8000",   # For local development
+        "http://3.80.3.4:8000"     # New EC2 IP
     ],
     allow_credentials=True,
     allow_methods=["*"],
