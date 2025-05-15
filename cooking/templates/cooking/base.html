@@ -337,12 +337,14 @@
                     <span>New Chat</span>
                 </a>
             </li>
+            {% if user.is_staff %}
             <li class="nav-item">
                 <a href="{% url 'vllm_chat' %}" class="nav-link">
                     <i class="fas fa-plus"></i>
                     <span>Cooking tips (vLLM)</span>
                 </a>
             </li>
+            {% endif %}
 
             <li class="nav-item">
                 <a href="{% url 'profile' %}" class="nav-link">
