@@ -449,15 +449,18 @@ def debug_view(request):
 @staff_member_required
 def vllm_connect_view(request):
     """View for connecting to the vLLM server"""
-    print(f"vllm_connect_view called by user: {request.user.username}")
+    print("=" * 80)
+    print("vllm_connect_view called")
+    print(f"User: {request.user.username}")
     print(f"Request method: {request.method}")
     print(f"Request path: {request.path}")
-    print(f"Request headers: {request.headers}")
+    print(f"Request headers: {dict(request.headers)}")
+    print(f"Request body: {request.body}")
     print(f"CSRF token: {request.headers.get('X-CSRFToken')}")
+    print("=" * 80)
     
     if request.method == 'POST':
         try:
-            print(f"Request body: {request.body}")
             data = json.loads(request.body)
             ip_address = data.get('ip_address')
             print(f"IP address: {ip_address}")
