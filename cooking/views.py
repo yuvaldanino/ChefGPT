@@ -447,21 +447,55 @@ def debug_view(request):
         return HttpResponse(f"Error: {str(e)}\nTraceback: {traceback.format_exc()}", status=500)
 
 @staff_member_required
-def vllm_chat_view(request):
-    if request.method == 'GET':
-        return render(request, 'cooking/vllm_chat.html')
-    
-    elif request.method == 'POST':
+def vllm_connect_view(request):
+    """View for connecting to the vLLM server"""
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            message = data.get('message')
+            ip_address = data.get('ip_address')
             
-            # TODO: Add the actual API call to your vLLM server
-            # For now, return a placeholder response
-            response = {
-                'response': 'This is a placeholder response. The vLLM API integration will be added next.'
-            }
+            if not ip_address:
+                return JsonResponse({'error': 'No IP address provided'}, status=400)
             
-            return JsonResponse(response)
+            # Store IP in Django session
+            request.session['vllm_server_ip'] = ip_address
+            return JsonResponse({'success': True})
+            
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    return render(request, 'cooking/vllm_connect.html')
+
+@staff_member_required
+def vllm_chat_view(request):
+    """View for the vLLM chat interface"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_message = data.get('message')
+            
+            if not user_message:
+                return JsonResponse({'error': 'No message provided'}, status=400)
+            
+            # Get the stored IP from the request
+            server_ip = request.session.get('vllm_server_ip')
+            if not server_ip:
+                return JsonResponse({'error': 'Not connected to vLLM server'}, status=400)
+            
+            # Make request to vLLM API
+            api_url = f'http://{server_ip}:8000/generate_tip'
+            response = requests.post(api_url, json={'prompt': user_message})
+            
+            if response.status_code == 200:
+                data = response.json()
+                return JsonResponse({
+                    'response': data['tip'],
+                    'tokens': data['tokens_generated']
+                })
+            else:
+                return JsonResponse({'error': 'Failed to generate tip'}, status=500)
+                
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return render(request, 'cooking/vllm_chat.html')

@@ -19,5 +19,6 @@ urlpatterns = [
     path('update-sidebar-state/', views.update_sidebar_state, name='update_sidebar_state'),
     path('health/', views.health_check, name='health_check'),
     path('debug/', views.debug_view, name='debug'),
+    path('vllm-connect/', views.vllm_connect_view, name='vllm_connect'),
     path('vllm-chat/', views.vllm_chat_view, name='vllm_chat'),
 ] 
