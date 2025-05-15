@@ -21,10 +21,15 @@ app = FastAPI(title="Cooking Tips API")
 # Add CORS middleware to allow cross-origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your Django app's domain
+    allow_origins=[
+        "http://chefgpt-alb-123456789.us-east-1.elb.amazonaws.com",  # Your ALB DNS
+        "http://localhost:8000",  # For local development
+        "http://127.0.0.1:8000"   # For local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Global variables for model and sampling parameters

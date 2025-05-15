@@ -449,6 +449,10 @@ def debug_view(request):
 @staff_member_required
 def vllm_connect_view(request):
     """View for connecting to the vLLM server"""
+    print(f"vllm_connect_view called by user: {request.user.username}")
+    print(f"User is staff: {request.user.is_staff}")
+    print(f"User is superuser: {request.user.is_superuser}")
+    
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -462,6 +466,7 @@ def vllm_connect_view(request):
             return JsonResponse({'success': True})
             
         except Exception as e:
+            print(f"Error in vllm_connect_view POST: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
             
     return render(request, 'cooking/vllm_connect.html')
@@ -469,6 +474,10 @@ def vllm_connect_view(request):
 @staff_member_required
 def vllm_chat_view(request):
     """View for the vLLM chat interface"""
+    print(f"vllm_chat_view called by user: {request.user.username}")
+    print(f"User is staff: {request.user.is_staff}")
+    print(f"User is superuser: {request.user.is_superuser}")
+    
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -479,11 +488,14 @@ def vllm_chat_view(request):
             
             # Get the stored IP from the request
             server_ip = request.session.get('vllm_server_ip')
+            print(f"Stored server IP: {server_ip}")
+            
             if not server_ip:
                 return JsonResponse({'error': 'Not connected to vLLM server'}, status=400)
             
             # Make request to vLLM API
             api_url = f'http://{server_ip}:8000/generate_tip'
+            print(f"Making API request to: {api_url}")
             response = requests.post(api_url, json={'prompt': user_message})
             
             if response.status_code == 200:
@@ -493,9 +505,11 @@ def vllm_chat_view(request):
                     'tokens': data['tokens_generated']
                 })
             else:
+                print(f"API request failed with status {response.status_code}")
                 return JsonResponse({'error': 'Failed to generate tip'}, status=500)
                 
         except Exception as e:
+            print(f"Error in vllm_chat_view POST: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
     
     return render(request, 'cooking/vllm_chat.html')

@@ -109,8 +109,11 @@ document.getElementById('connection-form').addEventListener('submit', async func
     
     try {
         // Check if the API is healthy
+        console.log(`Attempting to connect to: http://${ipAddress}:8000/health`);
         const response = await fetch(`http://${ipAddress}:8000/health`);
+        console.log(`Response status: ${response.status}`);
         const data = await response.json();
+        console.log(`Response data:`, data);
         
         if (data.status === 'healthy' && data.model_loaded) {
             // Store the IP in Django session
@@ -133,7 +136,8 @@ document.getElementById('connection-form').addEventListener('submit', async func
             throw new Error('API is not healthy');
         }
     } catch (error) {
-        errorMessage.textContent = 'Failed to connect to the server. Please check the IP address and try again.';
+        console.error('Connection error:', error);
+        errorMessage.textContent = `Failed to connect to the server: ${error.message}. Please check the IP address and try again.`;
         errorMessage.classList.remove('d-none');
     } finally {
         connectBtn.classList.remove('connecting');
