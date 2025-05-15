@@ -446,6 +446,7 @@ def debug_view(request):
         print("=" * 80)
         return HttpResponse(f"Error: {str(e)}\nTraceback: {traceback.format_exc()}", status=500)
 
+@csrf_exempt
 @staff_member_required
 def vllm_connect_view(request):
     """View for connecting to the vLLM server"""
