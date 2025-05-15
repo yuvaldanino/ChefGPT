@@ -451,6 +451,8 @@ def vllm_connect_view(request):
     """View for connecting to the vLLM server"""
     print(f"vllm_connect_view called by user: {request.user.username}")
     print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Request headers: {request.headers}")
     
     if request.method == 'POST':
         try:
@@ -472,6 +474,7 @@ def vllm_connect_view(request):
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
         except Exception as e:
             print(f"Error in vllm_connect_view POST: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
             return JsonResponse({'error': str(e)}, status=500)
             
     return render(request, 'cooking/vllm_connect.html')

@@ -130,8 +130,14 @@ document.getElementById('connection-form').addEventListener('submit', async func
             });
             
             console.log('Store response status:', storeResponse.status);
-            const storeData = await storeResponse.json();
-            console.log('Store response data:', storeData);
+            let storeData;
+            try {
+                storeData = await storeResponse.json();
+                console.log('Store response data:', storeData);
+            } catch (e) {
+                console.error('Error parsing store response:', e);
+                throw new Error('Invalid response from server');
+            }
             
             if (storeResponse.ok) {
                 console.log('Successfully stored IP, redirecting to chat...');
