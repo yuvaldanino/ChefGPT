@@ -1,0 +1,1 @@
+every time i wanna start the vLLM i need to take the new server IP and paste it in ngnix file and 

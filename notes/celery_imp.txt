@@ -1,0 +1,28 @@
+Phase 1: Celery & Redis Setup
+First, we'll verify the Celery and Redis setup in your Django project
+Create a Celery configuration file
+Set up a basic test task to ensure everything is working
+Test the connection between Django, Celery, and Redis
+Phase 2: Recipe Embedding Storage
+Create a model to store recipe embeddings (if not already present)
+Create a model to store user embeddings
+Create a model to store user recommendations
+Phase 3: Celery Task Implementation
+Create a Celery task for calculating user embeddings
+Create a Celery task for generating recommendations
+Implement the cosine similarity calculation
+Test the tasks independently
+Phase 4: Integration with Recipe Saving
+Modify the recipe saving view to trigger the Celery task
+Implement the logic to update user embeddings when a recipe is saved
+Test the end-to-end flow
+Phase 5: Frontend Implementation
+Add a new "Recommendations" tab in the sidebar
+Create a new Vue component for displaying recommendations
+Implement the API endpoint to fetch recommendations
+Add the frontend logic to display recommendations
+Phase 6: Testing & Optimization
+Test the recommendation system with different user scenarios
+Optimize the embedding calculations
+Add caching if needed
+Implement error handling
