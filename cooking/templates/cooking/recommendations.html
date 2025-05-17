@@ -1,0 +1,170 @@
+{% extends 'cooking/base.html' %}
+{% load recipe_filters %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Recommended Recipes</h1>
+            <p class="text-muted">Personalized recipe recommendations based on your saved recipes</p>
+        </div>
+    </div>
+
+    {% if recommended_recipes %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for rec in recommended_recipes %}
+        <div class="col">
+            <div class="card h-100 recipe-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3 d-flex justify-content-between align-items-center">
+                        {{ rec.recipe.title }}
+                        <span class="badge bg-primary">
+                            {{ rec.similarity_score|floatformat:1 }}% Match
+                        </span>
+                    </h5>
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="recipe-metadata">
+                            {% if rec.recipe.difficulty %}
+                            <span class="badge bg-primary me-2">⚡ {{ rec.recipe.difficulty }}</span>
+                            {% endif %}
+                            {% if rec.recipe.cuisine_type %}
+                            <span class="badge bg-success me-2">🌍 {{ rec.recipe.cuisine_type }}</span>
+                            {% endif %}
+                        </div>
+                        <!-- <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <form method="post" action="{% url 'save_recipe' rec.recipe.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-bookmark me-2"></i>Save Recipe
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div> -->
+                    </div>
+                    <div class="recipe-content">
+                        {{ rec.recipe.content|safe }}
+                    </div>
+                    <!-- <div class="text-center mt-3">
+                        <a href="{% url 'view_recipe' rec.recipe.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-book-open me-2"></i>View Full Recipe
+                        </a>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-lightbulb fa-4x text-muted"></i>
+        </div>
+        <h2 class="h4 mb-3">No recommendations available yet</h2>
+        <p class="text-muted mb-4">Save some recipes first to get personalized recommendations!</p>
+        <a href="{% url 'my_recipes' %}" class="btn btn-primary">
+            <i class="fas fa-book me-2"></i>View My Recipes
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.recipe-card {
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.d-flex.justify-content-between.align-items-start {
+    position: relative;
+    overflow: visible;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index: 10000;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    min-width: 200px;
+}
+
+.dropdown .btn-link {
+    position: relative;
+    z-index: 1;
+}
+
+.recipe-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+    overflow: visible;
+}
+
+.recipe-card .card-title {
+    font-size: 1.25rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.recipe-content {
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.recipe-content h2 {
+    display: none;
+}
+
+.recipe-content h3 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.recipe-content ul, .recipe-content ol {
+    padding-left: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.recipe-content li {
+    margin-bottom: 0.3rem;
+}
+
+.recipe-metadata .badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.8em;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.recipe-card.card {
+    transition: none !important;
+    transform: none !important;
+}
+
+.recipe-card.card:hover {
+    transform: none !important;
+}
+</style>
+{% endblock %} 

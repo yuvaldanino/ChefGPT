@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View
 from django.http import JsonResponse, HttpResponse
 from .forms import CustomUserCreationForm
-from .models import ChatSession, Message, SavedRecipe
+from .models import ChatSession, Message, SavedRecipe, UserEmbedding
 import requests
 import os
 from dotenv import load_dotenv
@@ -14,7 +14,7 @@ import json
 from django.views.decorators.http import require_POST, require_http_methods
 from .context_manager import classify_message_type, create_conversation_summary, get_relevant_context
 from .langchain_setup import get_recipe_response
-from .embeddings import generate_recipe_embedding, store_recipe_embedding
+from .embeddings import generate_recipe_embedding, store_recipe_embedding, get_recipe_recommendations
 from .db_connection import get_db_connection
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
@@ -22,6 +22,11 @@ from django.core.exceptions import PermissionDenied
 import traceback
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from .tasks import update_user_embedding
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -249,11 +254,7 @@ def save_recipe(request, chat_id):
                 existing_recipe.servings = servings
                 existing_recipe.embedding_id = stored_embedding['id']
                 existing_recipe.save()
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Recipe updated successfully',
-                    'recipe_id': existing_recipe.id
-                })
+                recipe_id = existing_recipe.id
             else:
                 # Create new recipe
                 recipe = SavedRecipe.objects.create(
@@ -267,11 +268,16 @@ def save_recipe(request, chat_id):
                     servings=servings,
                     embedding_id=stored_embedding['id']
                 )
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Recipe saved successfully',
-                    'recipe_id': recipe.id
-                })
+                recipe_id = recipe.id
+            
+            # Trigger user embedding update
+            update_user_embedding.delay(request.user.id)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Recipe saved successfully',
+                'recipe_id': recipe_id
+            })
                 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
@@ -296,11 +302,30 @@ def extract_ingredients(content):
         
         # Extract the ingredients list
         ingredients_section = content[start:end]
-        # Remove HTML tags and split into lines
-        ingredients = [line.strip() for line in ingredients_section.split('\n') 
-                      if line.strip() and not line.startswith('<')]
+        
+        # Find all list items
+        ingredients = []
+        current_pos = 0
+        while True:
+            # Find the next list item
+            li_start = ingredients_section.find('<li>', current_pos)
+            if li_start == -1:
+                break
+                
+            li_end = ingredients_section.find('</li>', li_start)
+            if li_end == -1:
+                break
+                
+            # Extract the ingredient text
+            ingredient = ingredients_section[li_start + 4:li_end].strip()
+            if ingredient:
+                ingredients.append(ingredient)
+                
+            current_pos = li_end + 5
+            
         return ingredients
-    except Exception:
+    except Exception as e:
+        print(f"Error extracting ingredients: {str(e)}")
         return []
 
 def extract_instructions(content):
@@ -318,11 +343,30 @@ def extract_instructions(content):
         
         # Extract the instructions list
         instructions_section = content[start:end]
-        # Remove HTML tags and split into lines
-        instructions = [line.strip() for line in instructions_section.split('\n') 
-                       if line.strip() and not line.startswith('<')]
+        
+        # Find all list items
+        instructions = []
+        current_pos = 0
+        while True:
+            # Find the next list item
+            li_start = instructions_section.find('<li>', current_pos)
+            if li_start == -1:
+                break
+                
+            li_end = instructions_section.find('</li>', li_start)
+            if li_end == -1:
+                break
+                
+            # Extract the instruction text
+            instruction = instructions_section[li_start + 4:li_end].strip()
+            if instruction:
+                instructions.append(instruction)
+                
+            current_pos = li_end + 5
+            
         return instructions
-    except Exception:
+    except Exception as e:
+        print(f"Error extracting instructions: {str(e)}")
         return []
 
 def extract_tips(content):
@@ -335,11 +379,30 @@ def extract_tips(content):
         
         # Extract the tips list
         tips_section = content[start:]
-        # Remove HTML tags and split into lines
-        tips = [line.strip() for line in tips_section.split('\n') 
-                if line.strip() and not line.startswith('<')]
+        
+        # Find all list items
+        tips = []
+        current_pos = 0
+        while True:
+            # Find the next list item
+            li_start = tips_section.find('<li>', current_pos)
+            if li_start == -1:
+                break
+                
+            li_end = tips_section.find('</li>', li_start)
+            if li_end == -1:
+                break
+                
+            # Extract the tip text
+            tip = tips_section[li_start + 4:li_end].strip()
+            if tip:
+                tips.append(tip)
+                
+            current_pos = li_end + 5
+            
         return tips
-    except Exception:
+    except Exception as e:
+        print(f"Error extracting tips: {str(e)}")
         return []
 
 @login_required
@@ -526,3 +589,119 @@ def vllm_chat_view(request):
             return JsonResponse({'error': str(e)}, status=500)
     
     return render(request, 'cooking/vllm_chat.html')
+
+@login_required
+def recommendations(request):
+    """
+    View for displaying recipe recommendations for the logged-in user.
+    """
+    try:
+        # Get the user's embedding and recommendations
+        user_embedding = UserEmbedding.objects.filter(user=request.user).first()
+        print(f"User embedding found: {user_embedding is not None}")
+        
+        if not user_embedding or not user_embedding.recommendations:
+            print("No recommendations found, triggering task")
+            # If no recommendations exist, trigger the task to generate them
+            from .tasks import update_user_embedding
+            update_user_embedding.delay(request.user.id)
+            messages.info(request, "We're preparing your recommendations. Please check back in a moment.")
+            return redirect('home')
+        
+        print(f"Found recommendations: {user_embedding.recommendations}")
+        
+        # Get the recommended recipes from Supabase
+        recommended_recipes = []
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                for rec in user_embedding.recommendations:
+                    # First try to get the recipe from SavedRecipe model
+                    saved_recipe = SavedRecipe.objects.filter(embedding_id=rec['recipe_id']).first()
+                    
+                    if saved_recipe:
+                        # If we found a saved recipe, use its content
+                        recommended_recipes.append({
+                            'recipe': {
+                                'id': saved_recipe.id,
+                                'title': saved_recipe.title,
+                                'cuisine_type': saved_recipe.cuisine_type,
+                                'difficulty': saved_recipe.difficulty,
+                                'content': saved_recipe.content
+                            },
+                            'similarity_score': rec['similarity_score']
+                        })
+                    else:
+                        # If no saved recipe found, get from Supabase
+                        cur.execute("""
+                            SELECT 
+                                id, title, cuisine, difficulty, 
+                                ingredients, instructions, tips
+                            FROM public.recipe_embeddings 
+                            WHERE id = %s
+                        """, (rec['recipe_id'],))
+                        result = cur.fetchone()
+                        print(f"Looking for recipe with embedding_id {rec['recipe_id']}, found: {result is not None}")
+                        if result:
+                            # Format the content like SavedRecipe
+                            content = f"""<h2 data-recipe="title">🍳 {result[1]}</h2>
+
+<h3 data-recipe="difficulty">⚡ Difficulty</h3>
+{result[3] or 'Not specified'}
+
+<h3 data-recipe="cuisine">🌍 Cuisine Type</h3>
+{result[2] or 'Not specified'}
+
+<h3 data-recipe="ingredients">📝 Ingredients</h3>
+
+<ul>
+"""
+                            # Add ingredients
+                            if result[4]:
+                                for ingredient in result[4]:
+                                    content += f"<li>{ingredient}</li>\n"
+                            content += "</ul>\n\n"
+
+                            # Add instructions
+                            content += """<h3 data-recipe="instructions">📋 Instructions</h3>
+
+<ol>
+"""
+                            if result[5]:
+                                for instruction in result[5]:
+                                    content += f"<li>{instruction}</li>\n"
+                            content += "</ol>\n\n"
+
+                            # Add tips if they exist
+                            if result[6]:
+                                content += """<h3 data-recipe="tips">💡 Tips</h3>
+
+<ul>
+"""
+                                for tip in result[6]:
+                                    content += f"<li>{tip}</li>\n"
+                                content += "</ul>\n"
+
+                            recommended_recipes.append({
+                                'recipe': {
+                                    'id': result[0],
+                                    'title': result[1],
+                                    'cuisine_type': result[2],
+                                    'difficulty': result[3],
+                                    'content': content
+                                },
+                                'similarity_score': rec['similarity_score']
+                            })
+        
+        print(f"Final recommended_recipes list length: {len(recommended_recipes)}")
+        
+        context = {
+            'recommended_recipes': recommended_recipes,
+            'title': 'Recommended Recipes'
+        }
+        return render(request, 'cooking/recommendations.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error in recommendations view: {str(e)}")
+        print(f"Error in recommendations view: {str(e)}")
+        messages.error(request, "Sorry, there was an error loading your recommendations.")
+        return redirect('home')

@@ -1,3 +1,7 @@
+celery -A chef_gpt worker --loglevel=info --pool=solo
+
+to run ^ 
+
 Phase 1: Celery & Redis Setup
 First, we'll verify the Celery and Redis setup in your Django project
 Create a Celery configuration file

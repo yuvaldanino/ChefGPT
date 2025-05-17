@@ -92,3 +92,17 @@ class SavedRecipe(models.Model):
     @property
     def clean_servings(self):
         return self.get_clean_value(self.servings)
+
+class UserEmbedding(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='embedding')
+    embedding = models.JSONField()  # Store the embedding vector
+    recommendations = models.JSONField(default=list)  # Store list of recommended recipe IDs
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s embedding"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]

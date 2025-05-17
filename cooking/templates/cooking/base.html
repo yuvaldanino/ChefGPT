@@ -337,6 +337,12 @@
                     <span>New Chat</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{% url 'recommendations' %}" class="nav-link">
+                    <i class="fas fa-utensils"></i>
+                    <span>Recommendations</span>
+                </a>
+            </li>
             {% if user.is_staff %}
             <li class="nav-item">
                 <a href="{% url 'vllm_connect' %}" class="nav-link">
@@ -352,6 +358,8 @@
                     <span>Profile</span>
                 </a>
             </li>
+            
+           
             <li class="nav-item">
                 <a href="{% url 'logout' %}" class="nav-link text-danger">
                     <i class="fas fa-sign-out-alt"></i>
