@@ -1,6 +1,8 @@
 
 # Chef ChatGPT 🍳🧠
 
+Check it out ! http://chefgpt-alb-1911712359.us-east-1.elb.amazonaws.com/home/
+
 An AI-powered recipe assistant that generates personalized recipes, chat responses, and intelligent food recommendations using LLMs, embeddings, and scalable cloud infrastructure.
 ![Blank diagram (2)](https://github.com/user-attachments/assets/6a8b1771-2d56-4dd0-bfcd-ca8047fda3e6)
 
